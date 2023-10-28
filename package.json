@@ -1,0 +1,98 @@
+{
+  "name": "electronreactsqlite",
+  "version": "0.1.0",
+  "private": true,
+  "main": "public/electron.js",
+  "homepage": "./",
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "electron-is-dev": "^2.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "sqlite3": "^5.1.6",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start-react": "react-scripts start",
+    "build-react": "react-scripts build",
+    "start-electron": "nodemon --watch ./public/* --exec \"electron .\"",
+    "dev": "concurrently \"cross-env BROWSER=none npm run start-react\" \"wait-on http://127.0.0.1:3000 && npm run start-electron\"",
+    "postinstall": "electron-builder install-app-deps",
+    "pack-app": "npm run build-react && electron-builder --dir",
+    "pack-build": "electorn-builder --dir",
+    "build": "npm run build-react && electron-builder",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "scripts-comments": {
+    "start-react": "Will start just the React app only",
+    "build-react": "Will build the React app only",
+    "start-electron": "This will use nodemon to watch for changes in the public folder and then execute electron. (Hotreload)",
+    "dev": "Will first run React, wait for it to boot up and then start Electron.",
+    "postinstall": "It will make electron-builder install any dependencies we need for our app",
+    "pack-app": "Building the app can take time. Packing the app is shorter. It will just pack the app so you can test your production builds.",
+    "pack-build": "",
+    "build": "Builds your app for distribution",
+    "test": "Comes with Create React App. Testing for your React app.",
+    "eject": "Comes with Create React App. Ejects your app from the CRA pipeline."
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^27.0.2",
+    "electron-builder": "^24.6.4",
+    "nodemon": "^3.0.1",
+    "wait-on": "^7.0.1"
+  },
+  "build": {
+    "appId": "com.yourcompany.yourapp",
+    "productName": "Your App Name",
+    "copyright": "Your App Copyrights",
+    "files": [
+      "build/**/*"
+    ],
+    "directories": {
+      "buildResources": "build"
+    },
+    "extraResources": [
+      {
+        "from": ".build/assets/randomfile.png",
+        "to": "assets/randomfile.png"
+      },
+      {
+        "from": "./db/",
+        "to": "db/",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "win": {
+      "icon": "./build/images/appicon.ico",
+      "target": [
+        "7z"
+      ]
+    }
+  }
+}

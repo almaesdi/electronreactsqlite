@@ -1,0 +1,124 @@
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+------------------------------Setup---------------------------------------------------------------
+
+- Creacion del proyecto react:
+
+npx create-react-app electronreactsqlite
+
+- Instalacion de dependecias de desarrollo (Development), por eso va con "-D"
+
+npm install -D electron electron-builder nodemon concurrently wait-on cross-env
+
+electron — Electron.
+electron-builder — To package the Electron app.
+nodemon — To monitor for changes during development and hot reload.
+concurrently — To launch the React app and Electron together
+wait-on — To wait for the React app to launch before the Electron app is launched.
+cross-env - Run scripts that set and use environment variables across platforms
+
+- Instalacion de dependencias:
+
+npm install electron-is-dev sqlite3
+
+electron-is-dev — Simple library to check if we’re in development mode or not.
+sqlite3 — We’ll use it later when we implement our database.
+
+- Creacion de archivos basicos de electron
+
+Dentro de la carpeta "public" crearemos 2 archivos electron.js y preload.js.
+
+If you care to know, the reason we are creating it in this folder specifically is because 
+when you build the React app, all contents of this folder get carried over to the build folder which makes 
+things very simple for production. Additionally, any changes to files in this folder will trigger hot reload 
+during development which can be very handy considering changes to the base Electron setup requires a full relaunch anyway.
+
+Dentro de electron.js pondremos el codigo basico de electron como la creacion de la ventana principal y sus configuraciones
+
+- Modificacion de package.json
+
+Agregamos al package.json para decirle a electron donde esta la configuracion de la ventana principal y su pagina homepage
+
+"main": "public/electron.js",
+"homepage":"./",
+
+Adicionalmente, renombraremos algunos scrpits (start y build) y agregaremos otros scripts:
+
+"scripts": {
+    "start-react": "react-scripts start",
+    "build-react": "react-scripts build",
+    "start-electron": "nodemon --watch ./public/* --exec \"electron .\"",
+    "dev": "concurrently \"cross-env BROWSER=none npm run start-react\" \"wait-on http://127.0.0.1:3000 && npm run start-electron\"",
+    "postinstall": "electron-builder install-app-deps",
+    "pack-app": "npm run build-react && electron-builder --dir",
+    "pack-build": "electorn-builder --dir",
+    "build": "npm run build-react && electron-builder",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+},
+
+Cada opcion se describe de la siguiente manera:
+
+start-react — Will start just the React app only
+build-react — Will build the React app only
+start-electron — This will use nodemon to watch for changes in the public folder and then execute electron. If you want to add more folders to be monitored, just add another —-watch followed by the path to that folder.
+dev — Will first run React, wait for it to boot up and then start Electron.
+postinstall — It will make electron-builder install any dependencies we need for our app
+pack-app — Building the app can take time. Packing the app is shorter. It’ll just pack the app so you can test your production builds.
+build- Builds your app for distribution
+test — Comes with Create React App. Testing for your React app.
+eject — Comes with Create React App. Ejects your app from the CRA pipeline.
+
+*Para versiones de node 17 o superior se debe usar "http://127.0.0.1:3000" en vez de "http://localhost:3000" en los script de ejecucion, sino
+provocará problemas en el npm run dev
+
+Finalmente, debemos agregar toda la configuracion respecto a la enpaquetamiento del programa para la libreria electron-builder. Para ello agregamos 
+la siguiente categoria:
+
+"build": {
+    "appId": "com.yourcompany.yourapp",
+    "productName": "Your App Name",
+    "copyright": "Your App Copyrights",
+    "files": [
+        "build/**/*"
+    ],
+    "directories": {
+        "buildResources": "build"
+    },
+    "extraResources": [
+        {
+            "from": ".build/assets/randomfile.png",
+            "to": "assets/randomfile.png"
+        },{
+            "from": "./db/",
+            "to": "db/",
+            "filter": ["**/*"]
+        }
+    ],
+    "win": {
+        "icon":"./build/images/appicon.ico",
+        "target": ["7z"]
+    }
+}
+
+En donde:
+
+build category — Needed to provide information to electron-builder
+appId — Has to be unique so your app can be identifiable.
+productName — Name of your app
+copyright — Your app copyright info
+files — All the files you want to be packed in to the archives (asar) by electron-builder. **/* indicates every file inside a particular folder. In this case, 
+I’m packing the entire build folder.
+directories — The location where electron-builder has to look for resources it needs. In our case, it is the build folder.
+extraResources — So here’s the tricky part.
+Along with the stuff you pack in the files category, you can pack extra files and folders with your application. These won’t be packed in the archive(asar) 
+but rather get copied in the resources folder of the application.
+So which files to add here?
+The general rule I follow is — if my app needs to edit or update info inside a particular file, then it needs to be an extra resource. If it doesn’t need to, 
+then it can go inside the file category above. In the above example, you can see a template on how to add individual files and also entire folders.
+If you are using worker_threads, then you need to pack your worker thread file as an extraResource too.
+If you are going to add a file as extraResources, then you can access that in your code with process.resourcesPath which gives you the direct path to 
+the resources folder. So in my case, if Iwant to access the db folder, it just type path.join(process.resourcesPath, “db/filename.db”) for the production build.
+win — The win category contains instructions specific to a windows build. You add a category called mac if you want to do a mac and etc. Follow the 
+electron-builder docs for info on this.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
